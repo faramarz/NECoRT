@@ -10,6 +10,10 @@ import asyncio
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import the Nash Equilibrium version of RecThink
 from nash_recursive_thinking import NashEquilibriumRecursiveChat
@@ -34,7 +38,7 @@ chat_instances = {}
 
 # Pydantic models for request/response validation
 class ChatConfig(BaseModel):
-    api_key: str
+    api_key: Optional[str] = None
     model: str = "mistralai/mistral-small-3.1-24b-instruct:free"
     num_agents: int = 3
     convergence_threshold: float = 0.05
@@ -56,9 +60,14 @@ async def initialize_chat(config: ChatConfig):
         # Generate a session ID
         session_id = f"necort_{datetime.now().strftime('%Y%m%d%H%M%S')}_{os.urandom(4).hex()}"
         
+        # Use API key from environment if not provided in the request
+        api_key = config.api_key or os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError("No API key provided. Please set OPENROUTER_API_KEY in .env file or provide it in the request.")
+        
         # Initialize the Nash Equilibrium chat instance
         chat = NashEquilibriumRecursiveChat(
-            api_key=config.api_key, 
+            api_key=api_key, 
             model=config.model,
             num_agents=config.num_agents,
             convergence_threshold=config.convergence_threshold
