@@ -15,22 +15,53 @@ export const RecThinkProvider = ({ children }) => {
   const [model, setModel] = useState('mistralai/mistral-small-3.1-24b-instruct:free');
   const [thinkingRounds, setThinkingRounds] = useState('auto');
   const [alternativesPerRound, setAlternativesPerRound] = useState(3);
+  const [thinkingSystem, setThinkingSystem] = useState('necort'); // 'necort' or 'recthink'
   const [error, setError] = useState(null);
   const [showThinkingProcess, setShowThinkingProcess] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [websocket, setWebsocket] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
+  // Load settings from localStorage on init
+  useEffect(() => {
+    try {
+      const savedApiKey = localStorage.getItem('recthink_api_key');
+      const savedModel = localStorage.getItem('recthink_model');
+      const savedThinkingSystem = localStorage.getItem('recthink_thinking_system');
+      
+      if (savedApiKey) setApiKey(savedApiKey);
+      if (savedModel) setModel(savedModel);
+      if (savedThinkingSystem) setThinkingSystem(savedThinkingSystem);
+    } catch (err) {
+      console.error('Error loading saved settings', err);
+    }
+  }, []);
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    try {
+      if (apiKey) localStorage.setItem('recthink_api_key', apiKey);
+      if (model) localStorage.setItem('recthink_model', model);
+      localStorage.setItem('recthink_thinking_system', thinkingSystem);
+    } catch (err) {
+      console.error('Error saving settings', err);
+    }
+  }, [apiKey, model, thinkingSystem]);
+
   // Initialize chat session
   const initializeChat = async () => {
     try {
       setError(null);
-      const result = await api.initializeChat(apiKey, model);
+      const result = await api.initializeChat(apiKey, model, thinkingSystem);
       setSessionId(result.session_id);
       
       // Initialize with welcome message
       setMessages([
-        { role: 'assistant', content: 'Welcome to RecThink! I use recursive thinking to provide better responses. Ask me anything.' }
+        { role: 'assistant', content: `Welcome to ${thinkingSystem === 'necort' ? 'NECoRT' : 'CoRT'}! ${
+          thinkingSystem === 'necort' 
+            ? 'I use Nash Equilibrium Chain of Recursive Thoughts to provide optimal responses.' 
+            : 'I use Chain of Recursive Thoughts to provide better responses.'
+        } Ask me anything.` }
       ]);
       
       // Set up WebSocket connection
@@ -65,7 +96,8 @@ export const RecThinkProvider = ({ children }) => {
       // Send message via API
       const result = await api.sendMessage(sessionId, content, {
         thinkingRounds: rounds,
-        alternativesPerRound
+        alternativesPerRound,
+        thinkingSystem
       });
       
       // Update conversation with assistant's response
@@ -189,6 +221,7 @@ export const RecThinkProvider = ({ children }) => {
     model,
     thinkingRounds,
     alternativesPerRound,
+    thinkingSystem,
     error,
     showThinkingProcess,
     sessions,
@@ -199,6 +232,7 @@ export const RecThinkProvider = ({ children }) => {
     setModel,
     setThinkingRounds,
     setAlternativesPerRound,
+    setThinkingSystem,
     setShowThinkingProcess,
     
     // Actions

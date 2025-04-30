@@ -15,8 +15,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Import the Nash Equilibrium version of RecThink
+# Import both recursive thinking implementations
 from nash_recursive_thinking import NashEquilibriumRecursiveChat
+from recursive_thinking_ai import EnhancedRecursiveThinkingChat
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -42,11 +43,14 @@ class ChatConfig(BaseModel):
     model: str = "mistralai/mistral-small-3.1-24b-instruct:free"
     num_agents: int = 3
     convergence_threshold: float = 0.05
+    thinking_system: str = "necort"  # "necort" or "recthink"
 
 class MessageRequest(BaseModel):
     session_id: str
     message: str
     thinking_rounds: Optional[int] = None
+    alternatives_per_round: Optional[int] = 3
+    thinking_system: Optional[str] = None
 
 class SaveRequest(BaseModel):
     session_id: str
@@ -55,42 +59,72 @@ class SaveRequest(BaseModel):
 
 @app.post("/api/initialize")
 async def initialize_chat(config: ChatConfig):
-    """Initialize a new NECoRT session"""
+    """Initialize a new session with NECoRT or standard recursive thinking"""
     try:
         # Generate a session ID
-        session_id = f"necort_{datetime.now().strftime('%Y%m%d%H%M%S')}_{os.urandom(4).hex()}"
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        session_id = f"{config.thinking_system}_{timestamp}_{os.urandom(4).hex()}"
         
         # Use API key from environment if not provided in the request
         api_key = config.api_key or os.getenv("OPENROUTER_API_KEY")
         if not api_key:
             raise ValueError("No API key provided. Please set OPENROUTER_API_KEY in .env file or provide it in the request.")
         
-        # Initialize the Nash Equilibrium chat instance
-        chat = NashEquilibriumRecursiveChat(
-            api_key=api_key, 
-            model=config.model,
-            num_agents=config.num_agents,
-            convergence_threshold=config.convergence_threshold
-        )
+        # Initialize the appropriate chat instance based on the thinking system
+        if config.thinking_system == "necort":
+            # Nash Equilibrium Chain of Recursive Thoughts
+            chat = NashEquilibriumRecursiveChat(
+                api_key=api_key, 
+                model=config.model,
+                num_agents=config.num_agents,
+                convergence_threshold=config.convergence_threshold
+            )
+            system_type = "NECoRT - Nash Equilibrium Chain of Recursive Thoughts"
+        else:
+            # Standard Chain of Recursive Thoughts
+            chat = EnhancedRecursiveThinkingChat(
+                api_key=api_key, 
+                model=config.model
+            )
+            system_type = "CoRT - Chain of Recursive Thoughts"
+            
         chat_instances[session_id] = chat
         
         return {
             "session_id": session_id, 
             "status": "initialized",
-            "system_type": "NECoRT - Nash Equilibrium Chain of Recursive Thoughts"
+            "system_type": system_type
         }
     except Exception as e:
-        logger.error(f"Error initializing NECoRT: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to initialize NECoRT: {str(e)}")
+        logger.error(f"Error initializing chat: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to initialize chat: {str(e)}")
 
 @app.post("/api/send_message")
 async def send_message(request: MessageRequest):
-    """Send a message and get a response with Nash Equilibrium thinking process"""
+    """Send a message and get a response with thinking process"""
     try:
         if request.session_id not in chat_instances:
             raise HTTPException(status_code=404, detail="Session not found")
         
         chat = chat_instances[request.session_id]
+        
+        # Handle system switching if requested
+        if request.thinking_system and request.thinking_system in ["necort", "recthink"]:
+            if (isinstance(chat, NashEquilibriumRecursiveChat) and request.thinking_system == "recthink") or \
+               (isinstance(chat, EnhancedRecursiveThinkingChat) and not isinstance(chat, NashEquilibriumRecursiveChat) and request.thinking_system == "necort"):
+                # Need to switch system - create a new instance with the same API key and model
+                api_key = chat.api_key
+                model = chat.model
+                
+                if request.thinking_system == "necort":
+                    # Switch to Nash Equilibrium
+                    chat = NashEquilibriumRecursiveChat(api_key=api_key, model=model)
+                else:
+                    # Switch to standard recursive thinking
+                    chat = EnhancedRecursiveThinkingChat(api_key=api_key, model=model)
+                
+                # Update the chat instance
+                chat_instances[request.session_id] = chat
         
         # Override thinking rounds if provided
         original_thinking_fn = chat._determine_thinking_rounds
@@ -99,11 +133,18 @@ async def send_message(request: MessageRequest):
             # Override the thinking rounds determination
             chat._determine_thinking_rounds = lambda _: request.thinking_rounds
         
+        # Set alternatives per round if provided and supported
+        if request.alternatives_per_round is not None and hasattr(chat, 'alternatives_per_round'):
+            chat.alternatives_per_round = request.alternatives_per_round
+        
         # Process the message
         result = chat.think_and_respond(request.message, verbose=True)
         
         # Restore original function
         chat._determine_thinking_rounds = original_thinking_fn
+        
+        # Determine system type for response
+        system_type = "NECoRT" if isinstance(chat, NashEquilibriumRecursiveChat) else "CoRT"
         
         return {
             "session_id": request.session_id,
@@ -112,7 +153,8 @@ async def send_message(request: MessageRequest):
             "thinking_history": result["thinking_history"],
             "converged": result.get("converged", False),
             "convergence_round": result.get("convergence_round"),
-            "final_response_agent": result.get("final_response_agent")
+            "final_response_agent": result.get("final_response_agent"),
+            "system_type": system_type
         }
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}")
@@ -129,7 +171,11 @@ async def save_conversation(request: SaveRequest):
         
         filename = request.filename
         if request.full_log:
-            chat.save_nash_equilibrium_log(filename)
+            # Use appropriate save method based on chat type
+            if isinstance(chat, NashEquilibriumRecursiveChat):
+                chat.save_nash_equilibrium_log(filename)
+            else:
+                chat.save_full_log(filename)
         else:
             chat.save_conversation(filename)
         

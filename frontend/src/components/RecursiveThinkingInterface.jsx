@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Send, Save, Settings, Brain, MoveDown, CheckCircle, X, MessageSquare, Clock, RefreshCw, Zap } from 'lucide-react';
 import { useRecThink } from '../context/RecThinkContext';
 import ReactMarkdown from 'react-markdown';
+import TicTacToe from './TicTacToe';
+import ErrorBoundary from './ErrorBoundary';
 
 const RecursiveThinkingInterface = () => {
   const {
@@ -16,12 +18,14 @@ const RecursiveThinkingInterface = () => {
     error,
     showThinkingProcess,
     connectionStatus,
+    thinkingSystem,
     
     setApiKey,
     setModel,
     setThinkingRounds,
     setAlternativesPerRound,
     setShowThinkingProcess,
+    setThinkingSystem,
     
     initializeChat,
     sendMessage,
@@ -198,6 +202,13 @@ const RecursiveThinkingInterface = () => {
         </button>
         
         <button 
+          className={`p-2 rounded-lg mb-4 ${activeTab === 'game' ? 'bg-gray-800 text-blue-500' : 'text-gray-400 hover:text-white'}`}
+          onClick={() => setActiveTab('game')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="2" y="2" rx="1" /><rect width="7" height="7" x="15" y="2" rx="1" /><rect width="7" height="7" x="2" y="15" rx="1" /><rect width="7" height="7" x="15" y="15" rx="1" /></svg>
+        </button>
+        
+        <button 
           className={`p-2 rounded-lg ${activeTab === 'settings' ? 'bg-gray-800 text-blue-500' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('settings')}
         >
@@ -334,12 +345,56 @@ const RecursiveThinkingInterface = () => {
                     onChange={(e) => setModel(e.target.value)}
                     className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="mistralai/mistral-small-3.1-24b-instruct:free">Mistral Small 3.1 24B</option>
+                    <option value="mistralai/mistral-small-3.1-24b-instruct:free">Mistral Small 3.1 24B (Free)</option>
+                    <option value="mistralai/mistral-small-3.1-24b-instruct">Mistral Small 3.1 24B</option>
+                    <option value="mistralai/mistral-small-24b-instruct-2501">Mistral Small 3</option>
+                    <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
                     <option value="anthropic/claude-3-opus-20240229">Claude 3 Opus</option>
                     <option value="anthropic/claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                    <option value="anthropic/claude-3-haiku-20240307">Claude 3 Haiku</option>
                     <option value="openai/gpt-4o-2024-05-13">GPT-4o</option>
+                    <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="google/gemini-pro">Gemini Pro</option>
+                    <option value="meta-llama/llama-3-70b-instruct">Llama 3 70B</option>
                   </select>
+                  <p className="mt-1 text-xs text-gray-500">Select a model to use with OpenRouter.</p>
                 </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Thinking System</label>
+                  <div className="flex items-center">
+                    <select 
+                      className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+                      value={thinkingSystem || "necort"}
+                      onChange={(e) => {
+                        if (typeof setThinkingSystem === 'function') {
+                          setThinkingSystem(e.target.value);
+                        }
+                      }}
+                    >
+                      <option value="necort">NECoRT - Nash Equilibrium Chain of Recursive Thoughts</option>
+                      <option value="recthink">CoRT - Standard Chain of Recursive Thoughts</option>
+                    </select>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    NECoRT uses game theory for multi-agent equilibrium. CoRT uses single-agent recursive improvement.
+                  </p>
+                </div>
+                
+                <button 
+                  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center justify-center"
+                  onClick={async () => {
+                    // Save API settings
+                    try {
+                      await initializeChat();
+                      alert("Settings saved successfully!");
+                    } catch (error) {
+                      alert("Error saving settings: " + error.message);
+                    }
+                  }}
+                >
+                  <Save size={16} className="mr-2" /> Save API Settings
+                </button>
               </div>
               
               <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
@@ -386,6 +441,14 @@ const RecursiveThinkingInterface = () => {
                   </label>
                 </div>
               </div>
+            </div>
+          )}
+          
+          {activeTab === 'game' && (
+            <div className="flex-1 overflow-y-auto bg-white">
+              <ErrorBoundary>
+                <TicTacToe />
+              </ErrorBoundary>
             </div>
           )}
           
