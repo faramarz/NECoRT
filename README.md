@@ -19,6 +19,32 @@ YES. I tested it with Mistral 3.1 24B and it went from "meh" to "holy crap", esp
 4. Final response is the survivor of this AI battle royale
 
 
+## NEW: NECoRT - Nash Equilibrium Chain of Recursive Thoughts
+
+This project now includes NECoRT, an enhanced version that integrates Nash Equilibrium concepts from game theory with the recursive thinking approach. Instead of a single agent improving itself, NECoRT creates a multi-agent ecosystem where multiple AI instances:
+
+1. Generate diverse responses to the same prompt
+2. Evaluate each other's responses 
+3. Improve based on group feedback
+4. Converge on a stable equilibrium
+
+NECoRT provides more stable, consensus-driven responses that represent optimal equilibrium points where no agent would unilaterally change their strategy.
+
+**[Read the full NECoRT documentation here](README_NECoRT.md)**
+
+### Quick Start for NECoRT
+
+```bash
+# On Windows
+start-necort.bat
+
+# On Linux
+pip install -r requirements.txt
+cd frontend && npm install
+cd ..
+python ./necort_web.py
+```
+
 ## How to use the Web UI(still early dev)
 1. Open start_recthink.bat
 2. wait for a bit as it installs dependencies
