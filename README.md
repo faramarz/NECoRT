@@ -1,177 +1,65 @@
-# CoRT (Chain of Recursive Thoughts) 🧠🔄
+# NECoRT: Nash-Equilibrium Chain of Recursive Thoughts
 
-## TL;DR: I made my AI think harder by making it argue with itself repeatedly. It works stupidly well.
-
-### What is this?
-CoRT makes AI models recursively think about their responses, generate alternatives, and pick the best one. It's like giving the AI the ability to doubt itself and try again... and again... and again.
-
-### Does it actually work?
-YES. I tested it with Mistral 3.1 24B and it went from "meh" to "holy crap", especially for such a small model, at programming tasks.
-
-
-## How it works
-1. AI generates initial response
-2. AI decides how many "thinking rounds" it needs
-3. For each round:
-   - Generates 3 alternative responses
-   - Evaluates all responses
-   - Picks the best one
-4. Final response is the survivor of this AI battle royale
-
-
-## How to use the Web UI(still early dev)
-1. Open start_recthink.bat
-2. wait for a bit as it installs dependencies
-3. profit??
-
-If running on linux:
-```
-pip install -r requirements.txt
-cd frontend && npm install
-cd ..
-python ./recthink_web.py
-```
-
-(open a new shell)
-
-```
-cd frontend
-npm start
-```
-
-
-## Examples
-
-
-Mistral 3.1 24B + CoRT
-![rec](https://github.com/user-attachments/assets/acbcf1f9-4715-4d2c-a31c-38b349602380)
-
-Mistral 3.1 24B non CoRT
-![non-rec](https://github.com/user-attachments/assets/9c4f6af9-0a8f-4c62-920c-f272fce225c1)
-
-
-## Try it yourself
-```python
-pip install -r requirements.txt
-export OPENROUTER_API_KEY="your-key-here"
-python recursive-thinking-ai.py
-```
-
-### The Secret Sauce
-The magic is in:
-
- - Self-evaluation
- - Competitive alternative generation
- - Iterative refinement
- - Dynamic thinking depth
-
-
-# NECoRT (Nash-Equilibrium Chain of Recursive Thoughts) 🧠🔄🎮
-
-## TL;DR: AI agents compete and collaborate to reach optimal equilibrium responses. Evolution meets Game Theory.
-
-### What is NECoRT?
-
-NECoRT extends the Chain of Recursive Thoughts (CoRT) framework by integrating Nash Equilibrium concepts from game theory. It creates a multi-agent ecosystem where AI instances:
-
-1. Generate diverse responses to the same prompt
-2. Evaluate each other's responses 
-3. Improve their responses based on group feedback
-4. Converge on a stable equilibrium where no agent would unilaterally change their strategy
-
-The result is responses that are not just recursive improvements but represent optimal consensus points where competing strategies reach equilibrium.
-
-### How is this different from regular CoRT?
-
-| Feature | CoRT | NECoRT |
-|---------|------|--------|
-| Thinking strategy | Single agent refining own thoughts | Multiple agents competing and evaluating |
-| Improvement mechanism | Generate alternatives & pick best | Game theoretic utility optimization |
-| Termination condition | Fixed rounds | Dynamic convergence to equilibrium |
-| Theoretical foundation | Self-reflection | Nash Equilibrium in game theory |
-| Output stability | Varies with each run | Converges to stable equilibria |
-
-## The Nash Equilibrium Advantage
-
-In game theory, a Nash Equilibrium is a state where no player can gain advantage by changing only their own strategy, given what others are doing. NECoRT applies this to AI reasoning by:
-
-1. **Multiple Perspectives**: Creates a utility matrix of how agents rate each other's responses
-2. **Strategic Improvements**: Agents learn from highest-rated responses
-3. **Convergence Detection**: Automatically identifies when the system reaches equilibrium
-4. **Optimal Selection**: Chooses the response that represents the best equilibrium point
-
-## How to Use NECoRT
-
-### Quick Start
-
-```bash
-# On Windows
-start-necort.bat
-
-# On Linux
-pip install -r requirements.txt
-cd frontend && npm install
-cd ..
-python ./necort_web.py
-
-# In a separate terminal
-cd frontend
-npm start
-```
-
-### API Usage
-
-```python
-from nash_recursive_thinking import NashEquilibriumRecursiveChat
-
-# Initialize with your API key
-necort = NashEquilibriumRecursiveChat(
-    api_key="your_openrouter_api_key",
-    num_agents=3,
-    convergence_threshold=0.05
-)
-
-# Get an equilibrium-optimized response
-result = necort.think_and_respond("Your complex question here")
-print(result["response"])
-
-# Examine the Nash Equilibrium process
-print(f"Converged in {result['convergence_round']} rounds")
-print(f"Final response from agent {result['final_response_agent']}")
-```
-
-## Technical Implementation
-
-NECoRT implements:
-
-1. **Utility Matrix Construction**: Each agent evaluates all other agents' responses
-2. **Nash Equilibrium Detection**: Identifies response sets that represent stable equilibria
-3. **Convergence Monitoring**: Tracks changes in utility matrix until stabilization
-4. **Equilibrium Response Selection**: Picks optimal response from the equilibrium set
-
-## Comparison to Other Methods
-
-| Method | Strengths | Weaknesses |
-|--------|-----------|------------|
-| Standard LLM | Fast, single response | Limited reflection |
-| Chain of Thought | Shows reasoning steps | Linear thought process |
-| CoRT | Recursive improvement | Single perspective |
-| NECoRT | Multi-agent equilibrium, stability, handles divergent ideas | More compute-intensive |
-
-## Future Directions
-
-- **Mixed Strategy Equilibria**: Allow probabilistic combinations of responses
-- **Evolutionary Dynamics**: Implement replicator dynamics for response evolution
-- **Coalition Formation**: Allow agent groups to form voting blocs
-- **Subgame Perfection**: Extend to multi-stage reasoning games
+**NECoRT** is a framework for multi-agent recursive reasoning inspired by game theory. It builds on Chain of Recursive Thought (CoRT) by introducing **multi-agent deliberation** and **Nash equilibrium convergence** to surface robust, self-consistent answers from language models.
 
 ---
 
-*"Let your thoughts argue, evolve, and stabilize."*
+## 🧠 Concept
 
+| Layer        | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| 🧩 CoRT       | A single model recursively evaluates, refines, and verifies its own answers |
+| 🤖 NECoRT     | Multiple agents generate and critique responses, converging on consensus    |
+| 🎯 Nash Layer | Final response is only accepted if no agent can unilaterally improve it     |
 
-### Contributing
-Found a way to make it even better? PR's welcome!
+The result is a form of **negotiated truth** — answers that survive scrutiny from multiple angles and stabilize into a response that’s not just correct, but *resilient*.
 
-### License
-MIT - Go wild with it
+---
+
+## 🚀 Why It Matters
+
+Traditional LLMs are one-shot, error-prone, and overly confident.
+
+| Method   | Pros                                 | Cons                      |
+|----------|--------------------------------------|---------------------------|
+| LLM      | Fast                                 | Shallow, brittle answers  |
+| CoRT     | Thoughtful, iterative refinement     | Still single perspective  |
+| NECoRT   | Diverse, verified, stable reasoning  | Higher compute cost       |
+
+---
+
+## 🔧 How It Works
+
+1. **Agents** propose solutions
+2. **Utility Matrix** is built by agents critiquing each other’s answers
+3. **Nash Equilibrium** is reached when no agent can unilaterally improve the outcome
+4. Final answer is extracted from the most stable agent response
+
+---
+
+## 📁 Project Structure
+
+| File / Folder         | Purpose                                                                 |
+|-----------------------|-------------------------------------------------------------------------|
+| `nash_recursive_thinking.py` | Core NECoRT logic — agent loop, evaluation, equilibrium checks   |
+| `necort_web.py`       | Web interface backend for NECoRT                                         |
+| `recthink_web.py`     | Web interface for classic CoRT                                           |
+| `frontend/`           | React-based UI                                                           |
+| `start-necort.bat`    | Launch NECoRT locally (Windows)                                          |
+| `requirements.txt`    | Python dependencies                                                      |
+| `rec.PNG`, `non-rec.png` | Visual examples of CoRT vs non-CoRT outputs                          |
+
+---
+
+## 💻 Quickstart
+
+```bash
+# Windows
+start-necort.bat
+
+# Linux / Mac
+pip install -r requirements.txt
+cd frontend && npm install && npm start
+cd ..
+python necort_web.py
+```
